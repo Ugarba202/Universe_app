@@ -1,0 +1,153 @@
+const programTypes = ['Diploma', 'Undergraduate'];
+
+const faculties = {
+  'ABU Business School': [
+    'Accounting',
+    'Insurance',
+    'Banking and Finance',
+    'Business Administration',
+    'Business Management',
+    'Economics',
+    'Marketing',
+    'Actuarial Science and Insurance',
+  ],
+  'Administration': [
+    'Public Administration',
+    'Local Government and Development Studies',
+  ],
+  'Agriculture': [
+    'Agricultural Extension and Rural Development',
+    'Forestry and Wildlife',
+    'Fisheries',
+    'Agricultural Economics',
+  ],
+  'Allied Health Sciences': [
+    'Medical Laboratory Science',
+    'Medical Radiography',
+    'Nursing Science',
+  ],
+  'Arts': [
+    'Arabic',
+    'Archaeology',
+    'Theatre and Performing Arts',
+    'English',
+    'French',
+    'African Languages and Cultures',
+    'History',
+  ],
+  'Basic Clinical Sciences': [],
+  'Basic Medical Sciences': ['Human Anatomy', 'Human Physiology'],
+  'Clinical Sciences': [
+    'Dental Surgery',
+    'Chemical Pathology',
+    'Haematology and Blood Transfusion',
+    'Community Medicine',
+    'Medicine',
+    'Pathology (Morbid Anatomy)',
+    'Obstetrics and Gynecology',
+  ],
+  'Dental Surgery': [],
+  'Education': [
+    'Science Education',
+    'Arts and Social Science Education',
+    'Educational Foundation and Curriculum',
+    'Educational Psychology and Counselling',
+    'Home Economics',
+    'Vocational and Technical Education',
+    'Physical and Health Education',
+    'Human Kinetics and Health Education',
+    'Library and Information Science',
+  ],
+  'Engineering': [
+    'Metallurgical and Materials Engineering',
+    'Mechanical Engineering',
+    'Chemical Engineering',
+    'Civil Engineering',
+    'Computer Engineering',
+    'Electronics & Telecommunication Engineering',
+    'Polymer & Textile Engineering',
+    'Water Resources & Environmental Engineering',
+    'Agricultural Engineering',
+    'Mechatronics Engineering',
+    'Automotive Engineering',
+  ],
+  'Environmental Design': [
+    'Urban and Regional Planning',
+    'Fine Arts',
+    'Industrial Design',
+    'Geomatics',
+    'Glass and Silicate Technology',
+    'Architecture',
+    'Building',
+  ],
+  'Law': [
+    'Civil Law',
+    'Islamic Law',
+    'Commercial Law',
+    'Private Law',
+    'Public Law',
+  ],
+  'Life Sciences': [
+    'Biochemistry',
+    'Biological Sciences',
+    'Botany',
+    'Microbiology',
+    'Zoology',
+  ],
+  'Management Sciences': [],
+  'Pharmacy': [
+    'Pharmacy',
+    'Clinical Pharmacy & Pharmacy Practice',
+    'Pharmaceutical and Medicinal Chemistry',
+    'Pharmaceutics and Pharmaceutical Microbiology',
+    'Pharmacognosy and Drug Development',
+    'Pharmacology and Clinical Pharmacy',
+  ],
+  'Physical Sciences': [
+    'Geography and Environmental Management',
+    'Chemistry',
+    'Computer Science',
+    'Geology',
+    'Mathematics',
+    'Physics',
+    'Polymer and Textile Engineering',
+    'Statistics',
+  ],
+  'Social Sciences': [
+    'Political Science',
+    'Mass Communication',
+    'Sociology',
+    'Economics',
+  ],
+  'Veterinary Medicine': [
+    'Veterinary Medicine',
+    'Veterinary Surgery and Radiology',
+    'Theriogenology and Production',
+    'Veterinary Public Health and Preventive Medicine',
+    'Veterinary Anatomy',
+    'Veterinary Parasitology and Entomology',
+    'Veterinary Microbiology',
+    'Veterinary Pathology',
+    'Veterinary Pharmacology and Toxicology',
+    'Veterinary Physiology',
+  ],
+};
+
+const levels = ['100', '200', '300', '400', '500', '600'];
+const semesters = ['First Semester', 'Second Semester'];
+
+const mockCourses = {
+  'Computer Engineering': {
+    '100': ['MATH 101', 'PHYS 101'],
+    '300': ['COE 301', 'COE 302', 'COE 303'],
+    '400': ['COE 401', 'COE 402'],
+  },
+  'Computer Science': {
+    '100': ['CSC 101', 'CSC 102'],
+    '200': ['CSC 201', 'CSC 202'],
+  },
+  'Civil Engineering': {
+    '100': ['GEG 101'],
+    '200': ['CVE 201'],
+  }
+};
