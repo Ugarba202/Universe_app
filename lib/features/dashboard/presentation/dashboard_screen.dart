@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/signup/signup_provider.dart';
+import 'materials_screen.dart';
+import 'notification_screen.dart';
+import '../../materials/presentation/upload_material_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -10,7 +13,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userState = ref.watch(signupProvider);
-    final firstName = userState.fullName.split(' ').first;
+    final regNo = userState.registrationNumber;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -53,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        'Welcome, $firstName',
+                        'Welcome, $regNo',
                         style: const TextStyle(
                           color: AppColors.textDark,
                           fontSize: 20,
@@ -65,16 +68,26 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     Stack(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.05),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.notifications_none_rounded,
-                            color: AppColors.textDark,
-                            size: 26,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationScreen(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.notifications_none_rounded,
+                              color: AppColors.textDark,
+                              size: 26,
+                            ),
                           ),
                         ),
                         Positioned(
@@ -161,6 +174,18 @@ class DashboardScreen extends ConsumerWidget {
                       child: _ActionCard(
                         icon: Icons.menu_book,
                         title: 'Browse Courses',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MaterialsScreen(
+                                initialFaculty: userState.faculty,
+                                initialDepartment: userState.department,
+                                initialLevel: userState.level,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -168,6 +193,14 @@ class DashboardScreen extends ConsumerWidget {
                       child: _ActionCard(
                         icon: Icons.upload_file,
                         title: 'Upload Material',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const UploadMaterialScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -196,21 +229,31 @@ class DashboardScreen extends ConsumerWidget {
 class _ActionCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final VoidCallback onTap;
 
-  const _ActionCard({required this.icon, required this.title});
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: AppColors.primaryGreen),
-            const SizedBox(height: 8),
-            Text(title),
-          ],
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(icon, size: 40, color: AppColors.primaryGreen),
+              const SizedBox(height: 8),
+              Text(title),
+            ],
+          ),
         ),
       ),
     );

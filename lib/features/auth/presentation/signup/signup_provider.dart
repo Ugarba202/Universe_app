@@ -5,12 +5,12 @@ class SignupNotifier extends StateNotifier<SignupState> {
   SignupNotifier() : super(SignupState());
 
   // STEP 1
-  void updateName(String name) {
-    state = state.copyWith(fullName: name, error: null);
-  }
-
   void updateRegistrationNumber(String regNo) {
     state = state.copyWith(registrationNumber: regNo, error: null);
+  }
+
+  void updateEmail(String email) {
+    state = state.copyWith(email: email, error: null);
   }
 
   void updateGender(String gender) {
@@ -18,12 +18,28 @@ class SignupNotifier extends StateNotifier<SignupState> {
   }
 
   bool validateStepOne() {
-    if (state.fullName.isEmpty ||
-        state.registrationNumber.isEmpty ||
+    if (state.registrationNumber.isEmpty ||
+        state.email.isEmpty ||
         state.gender.isEmpty) {
-      state = state.copyWith(error: 'All fields including gender are required');
+      state = state.copyWith(error: 'All fields are required');
       return false;
     }
+
+    // Alphanumeric check for Reg No: Must have letters AND numbers
+    final regNoRegex = RegExp(r'^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]+$');
+    if (!regNoRegex.hasMatch(state.registrationNumber)) {
+      state = state.copyWith(
+          error: 'Registration Number must contain both letters and numbers');
+      return false;
+    }
+
+    // Strict Email check
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(state.email)) {
+      state = state.copyWith(error: 'Please enter a valid email address');
+      return false;
+    }
+
     return true;
   }
 

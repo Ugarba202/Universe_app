@@ -4,7 +4,18 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/signup/academic_data.dart';
 
 class MaterialsScreen extends StatefulWidget {
-  const MaterialsScreen({super.key, String courseTitle = ''});
+  final String courseTitle;
+  final String? initialFaculty;
+  final String? initialDepartment;
+  final String? initialLevel;
+
+  const MaterialsScreen({
+    super.key, 
+    this.courseTitle = '',
+    this.initialFaculty,
+    this.initialDepartment,
+    this.initialLevel,
+  });
 
   @override
   State<MaterialsScreen> createState() => _MaterialsScreenState();
@@ -18,6 +29,14 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   int _selectedTabIndex = 1; // 0 = Past Question, 1 = Reading Material
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedFaculty = widget.initialFaculty;
+    _selectedDepartment = widget.initialDepartment;
+    _selectedLevel = widget.initialLevel;
+  }
 
   IconData _getFacultyIcon(String faculty) {
     switch (faculty) {
@@ -85,14 +104,30 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
 
   void _onBack() {
     setState(() {
+      // If we are at the initial filtered state, popping should be handled by the parent/appbar
+      // We decend: Semester -> Level -> Dept -> Faculty
+      
       if (_selectedSemester != null) {
         _selectedSemester = null;
       } else if (_selectedLevel != null) {
-        _selectedLevel = null;
+        // If locked to level, don't clear it, just pop context if that was the entry point
+        if (widget.initialLevel != null) {
+          Navigator.of(context).pop();
+        } else {
+          _selectedLevel = null;
+        }
       } else if (_selectedDepartment != null) {
-        _selectedDepartment = null;
+        if (widget.initialDepartment != null) {
+           Navigator.of(context).pop();
+        } else {
+          _selectedDepartment = null;
+        }
       } else if (_selectedFaculty != null) {
-        _selectedFaculty = null;
+         if (widget.initialFaculty != null) {
+           Navigator.of(context).pop();
+        } else {
+          _selectedFaculty = null;
+        }
       }
       _searchQuery = '';
       _searchController.clear();
@@ -106,6 +141,14 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         ? _selectedSemester! 
         : (_selectedLevel ?? (_selectedDepartment ?? (_selectedFaculty ?? 'Material Hub')));
 
+    // Determine if we should show the custom back arrow
+    // We show it if we have a selection AND we are not at the "root" of what the user is allowed to see.
+    // Actually, simpler: We always want a back button. 
+    // If we are deep, it goes back up. If we are at root (whether simplified root or full root), it pops.
+    // The previous logic was: leading: (_selectedFaculty != null) ? IconButton(...) : null
+    // If we passed initialFaculty, _selectedFaculty is NOT null. So it shows the button.
+    // The button calls _onBack.
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -120,17 +163,15 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        leading: (_selectedFaculty != null)
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
-                onPressed: _onBack,
-              )
-            : null,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
+          onPressed: _onBack,
+        ),
       ),
       body: Column(
         children: [
           // Breadcrumbs
-          if (_selectedFaculty != null)
+          if (widget.initialLevel == null && _selectedFaculty != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: SingleChildScrollView(

@@ -1,5 +1,4 @@
 class SignupState {
-  final String fullName;
   final String registrationNumber;
 
   final String programType;
@@ -11,12 +10,12 @@ class SignupState {
   final String confirmPassword;
 
   final String gender;
+  final String email;
   final String phoneNumber;
   final String? profileImagePath;
   final String? error;
 
   SignupState({
-    this.fullName = '',
     this.registrationNumber = '',
     this.programType = '',
     this.faculty = '',
@@ -25,13 +24,13 @@ class SignupState {
     this.password = '',
     this.confirmPassword = '',
     this.gender = '',
+    this.email = '',
     this.phoneNumber = '',
     this.profileImagePath,
     this.error,
   });
 
   SignupState copyWith({
-    String? fullName,
     String? registrationNumber,
     String? programType,
     String? faculty,
@@ -40,12 +39,12 @@ class SignupState {
     String? password,
     String? confirmPassword,
     String? gender,
+    String? email,
     String? phoneNumber,
     String? profileImagePath,
     String? error,
   }) {
     return SignupState(
-      fullName: fullName ?? this.fullName,
       registrationNumber:
           registrationNumber ?? this.registrationNumber,
       programType: programType ?? this.programType,
@@ -56,6 +55,7 @@ class SignupState {
       confirmPassword:
           confirmPassword ?? this.confirmPassword,
       gender: gender ?? this.gender,
+      email: email ?? this.email,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       profileImagePath: profileImagePath ?? this.profileImagePath,
       error: error,

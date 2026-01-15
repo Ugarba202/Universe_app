@@ -145,12 +145,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
             const SizedBox(height: 32),
 
-            // Read-only Institutional Details
-            _buildReadOnlyCard(
-              label: 'Full Name',
-              value: userState.fullName,
-              icon: Icons.person_outline_rounded,
-            ),
+           
             const SizedBox(height: 16),
             _buildReadOnlyCard(
               label: 'Registration Number',

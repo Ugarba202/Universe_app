@@ -35,6 +35,10 @@ class UploadMaterialScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
@@ -77,6 +81,8 @@ class UploadMaterialScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           _buildLevelDropdown(state, notifier),
+          const SizedBox(height: 20),
+          _buildSemesterDropdown(state, notifier),
 
           const SizedBox(height: 40),
           _buildSectionHeader('Course Information'),
@@ -175,6 +181,45 @@ class UploadMaterialScreen extends ConsumerWidget {
               .toList(),
           onChanged: (val) {
             if (val != null) notifier.updateLevel(val);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSemesterDropdown(UploadState state, UploadNotifier notifier) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Semester',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primaryGreen,
+          ),
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: state.semester.isEmpty ? null : state.semester,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.withOpacity(0.05),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
+          items: [
+            'First Semester',
+            'Second Semester',
+          ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+          onChanged: (val) {
+            if (val != null) notifier.updateSemester(val);
           },
         ),
       ],
@@ -312,16 +357,21 @@ class UploadMaterialScreen extends ConsumerWidget {
     final List<String> courses = [];
     if (mockCourses.containsKey(state.department)) {
       final deptLevelCourses = mockCourses[state.department]?[state.level];
-      if (deptLevelCourses != null) {
-        courses.addAll(deptLevelCourses as Iterable<String>);
+      if (deptLevelCourses != null && state.semester.isNotEmpty) {
+        final semesterCourses = deptLevelCourses[state.semester];
+        if (semesterCourses != null) {
+          courses.addAll(semesterCourses);
+        }
       }
     }
+    // Local courses logic
     final localDeptCourses = state.localCourses[state.department]?[state.level];
     if (localDeptCourses != null) {
       for (final code in localDeptCourses) {
         if (!courses.contains(code)) courses.add(code);
       }
     }
+    
     return courses..sort();
   }
 
@@ -334,43 +384,7 @@ class UploadMaterialScreen extends ConsumerWidget {
         keyboardType: TextInputType.number,
       );
     }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Semester',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primaryGreen,
-          ),
-        ),
-        const SizedBox(height: 12),
-        DropdownButtonFormField<String>(
-          value: state.semester.isEmpty ? null : state.semester,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey.withOpacity(0.05),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
-          items: [
-            '1st Semester',
-            '2nd Semester',
-          ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-          onChanged: (val) {
-            if (val != null) notifier.updateSemester(val);
-          },
-        ),
-      ],
-    );
+    return const SizedBox.shrink(); 
   }
 
   Widget _buildFilePicker(UploadState state, UploadNotifier notifier) {

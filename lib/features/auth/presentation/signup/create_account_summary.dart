@@ -34,11 +34,11 @@ class _CreateAccountSummaryState extends ConsumerState<CreateAccountSummary>
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutBack,
-      ),
-    );
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutBack,
+          ),
+        );
 
     _animationController.forward();
   }
@@ -95,7 +95,9 @@ class _CreateAccountSummaryState extends ConsumerState<CreateAccountSummary>
                               child: Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryGreen.withOpacity(0.1),
+                                  color: AppColors.primaryGreen.withOpacity(
+                                    0.1,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
@@ -107,10 +109,10 @@ class _CreateAccountSummaryState extends ConsumerState<CreateAccountSummary>
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 32), 
                             Center(
                               child: Text(
-                                'Welcome, ${state.fullName.split(' ').first}!',
+                                 'Welcome, ${state.registrationNumber.split(' ').first}!',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 28,
@@ -148,16 +150,21 @@ class _CreateAccountSummaryState extends ConsumerState<CreateAccountSummary>
 
                             // Action Button
                             ElevatedButton(
-                              onPressed: _isCreatingAccount ? null : _handleFinish,
+                              onPressed: _isCreatingAccount
+                                  ? null
+                                  : _handleFinish,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryGreen,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                disabledBackgroundColor: AppColors.primaryGreen.withOpacity(0.6),
+                                disabledBackgroundColor: AppColors.primaryGreen
+                                    .withOpacity(0.6),
                               ),
                               child: _isCreatingAccount
                                   ? const SizedBox(
@@ -171,8 +178,9 @@ class _CreateAccountSummaryState extends ConsumerState<CreateAccountSummary>
                                   : const Text(
                                       'Next',
                                       style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                             ),
                             if (_isCreatingAccount)

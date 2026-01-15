@@ -122,17 +122,19 @@ class _CreateAccountStep1State extends ConsumerState<CreateAccountStep1>
                             ),
                             const SizedBox(height: 48),
 
-                            _buildInputField(
-                              label: 'What can we call you?',
-                              hint: 'enter your name',
-                              onChanged: notifier.updateName,
-                            ),
-                            const SizedBox(height: 24),
+
 
                             _buildInputField(
                               label: 'What is your registration number?',
                               hint: 'enter your registration number',
                               onChanged: notifier.updateRegistrationNumber,
+                            ),
+                            const SizedBox(height: 24),
+
+                            _buildInputField(
+                              label: 'What is your email address?',
+                              hint: 'enter your email address',
+                              onChanged: notifier.updateEmail,
                             ),
                             const SizedBox(height: 24),
 

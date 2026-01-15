@@ -11,15 +11,36 @@ class UploadNotifier extends StateNotifier<UploadState> {
   }
 
   void updateFaculty(String value) {
-    state = state.copyWith(faculty: value, department: '', error: null);
+    state = state.copyWith(
+      faculty: value,
+      department: '',
+      level: '',
+      semester: '',
+      courseCode: '',
+      courseTitle: '',
+      error: null,
+    );
   }
 
   void updateDepartment(String value) {
-    state = state.copyWith(department: value, error: null);
+    state = state.copyWith(
+      department: value,
+      level: '',
+      semester: '',
+      courseCode: '',
+      courseTitle: '',
+      error: null,
+    );
   }
 
   void updateLevel(String value) {
-    state = state.copyWith(level: value, error: null);
+    state = state.copyWith(
+      level: value,
+      semester: '',
+      courseCode: '',
+      courseTitle: '',
+      error: null,
+    );
   }
 
   void updateCourseCode(String value) {
@@ -51,7 +72,12 @@ class UploadNotifier extends StateNotifier<UploadState> {
   }
 
   void updateSemester(String value) {
-    state = state.copyWith(semester: value, error: null);
+    state = state.copyWith(
+      semester: value,
+      courseCode: '',
+      courseTitle: '',
+      error: null,
+    );
   }
 
   void updateDescription(String value) {

@@ -13,89 +13,103 @@ class CourseMaterialsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              courseCode,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: AppColors.textDark,
-              ),
-            ),
-            Text(
-              courseTitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: AppColors.primaryGreen.withOpacity(0.1),
-                shape: BoxShape.circle,
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                courseCode,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppColors.textDark,
+                ),
               ),
-              child: Icon(
-                Icons.folder_open_rounded,
-                size: 64,
-                // ignore: deprecated_member_use
-                color: AppColors.primaryGreen.withOpacity(0.5),
+              Text(
+                courseTitle,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'No materials yet',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'This folder is currently empty',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Future: Navigate to upload screen
-        },
-        backgroundColor: AppColors.primaryGreen,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Upload Material',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+            ],
+          ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
+            onPressed: () => Navigator.pop(context),
+          ),
+          bottom: const TabBar(
+            labelColor: AppColors.primaryGreen,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: AppColors.primaryGreen,
+            tabs: [
+              Tab(text: 'Past Questions'),
+              Tab(text: 'Reading Materials'),
+            ],
           ),
         ),
+        body: TabBarView(
+          children: [
+            _buildMaterialList('Past Question'),
+            _buildMaterialList('Reading Material'),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildMaterialList(String type) {
+    // Mock data simulation based on types and course code
+    // In a real app, you would filter your materials provider by courseCode AND type
+// Toggle this to test empty state
+
+
+    // Mock List
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        return Card(
+          elevation: 0,
+          color: Colors.grey[50], // Subtle background
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey.withOpacity(0.2))),
+          child: ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: type == 'Past Question'
+                    ? Colors.orange.withOpacity(0.1)
+                    : Colors.blue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                type == 'Past Question'
+                    ? Icons.quiz_rounded
+                    : Icons.menu_book_rounded,
+                color: type == 'Past Question' ? Colors.orange : Colors.blue,
+              ),
+            ),
+            title: Text(
+              '$courseCode $type ${index + 1}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(
+              'Uploaded by User • 2 days ago',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+            trailing: const Icon(Icons.download_rounded, color: Colors.grey),
+            onTap: () {
+              // Open file logic
+            },
+          ),
+        );
+      },
     );
   }
 }
