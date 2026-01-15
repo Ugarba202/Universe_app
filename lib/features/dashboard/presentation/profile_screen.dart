@@ -1,9 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/theme/app_colors.dart' show AppColors;
 import '../../auth/presentation/login/login_screen.dart';
 import '../../auth/presentation/signup/signup_provider.dart';
-
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -21,13 +22,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize with current user level
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userState = ref.read(signupProvider);
       setState(() {
         _selectedLevel = userState.level.isNotEmpty ? userState.level : null;
       });
     });
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      ref.read(signupProvider.notifier).updateAvatar(image.path);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Profile picture updated'),
+            backgroundColor: AppColors.primaryGreen),
+      );
+    }
   }
 
   void _saveChanges() {
@@ -38,14 +52,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Profile updated successfully'),
+            content: Text('Level updated successfully'),
             backgroundColor: AppColors.primaryGreen),
       );
     }
   }
 
   void _logout() {
-    // Navigate to Login and remove all routes
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
@@ -54,244 +67,301 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(signupProvider);
+    final state = ref.watch(signupProvider);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Light background for contrast
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('My Profile',
-            style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
-        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(_isEditing ? Icons.close : Icons.edit_rounded,
-                color: AppColors.primaryGreen),
-            onPressed: () {
-              setState(() {
-                _isEditing = !_isEditing;
-                // Reset selection if cancelling
-                if (!_isEditing) {
-                  _selectedLevel = userState.level;
-                }
-              });
-            },
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            // Avatar Section
-            Center(
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primaryGreen, width: 2),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Avatar (With Camera Icon)
+              Center(
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(state.profileImagePath != null ? 0 : 24),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryGreen.withOpacity(0.08),
+                        shape: BoxShape.circle,
+                        image: state.profileImagePath != null
+                            ? DecorationImage(
+                                image: FileImage(File(state.profileImagePath!)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      width: 120,
+                      height: 120,
+                      child: state.profileImagePath == null
+                          ? const Icon(
+                              Icons.face_3_rounded,
+                              size: 70,
+                              color: AppColors.primaryGreen,
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: AppColors.primaryGreen,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Center(
-                  child: Icon(
-                    userState.gender == 'Female'
-                        ? Icons.face_3_rounded
-                        : Icons.face_rounded,
-                    size: 50,
+              ),
+              const SizedBox(height: 32),
+
+              // Welcome Text (As seen in image)
+              Center(
+                child: Text(
+                  'Welcome!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
                     color: AppColors.primaryGreen,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              userState.registrationNumber,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            Text(
-              userState.email,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-            ),
-            const SizedBox(height: 32),
-
-            // Academic Details Card
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'Your registration summary',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[400],
+                    fontWeight: FontWeight.w500,
                   ),
-                ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'ACADEMIC DETAILS',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
-                      letterSpacing: 1,
+              const SizedBox(height: 48),
+
+              // Registration Card (As seen in image)
+              _buildSummaryCard(
+                icon: Icons.assignment_ind_outlined,
+                label: 'Registration Number',
+                value: state.registrationNumber,
+              ),
+              const SizedBox(height: 16),
+
+              // Academic Info Card (As seen in image)
+              _buildSummaryCard(
+                icon: Icons.account_balance_outlined,
+                label: 'Academic Info',
+                value: '${state.faculty}\n${state.department}',
+              ),
+              const SizedBox(height: 16),
+
+              // Level Card (Editable as requested)
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isEditing = !_isEditing;
+                    if (!_isEditing) _selectedLevel = state.level;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50], // Slightly off-white like in image
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _isEditing ? AppColors.primaryGreen : Colors.grey[200]!,
+                      width: 1,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildReadOnlyField('Faculty', userState.faculty),
-                  const Divider(height: 24),
-                  _buildReadOnlyField('Department', userState.department),
-                  const Divider(height: 24),
-                  
-                  // Level Field (Editable)
-                  Row(
+                  child: Row(
                     children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.trending_up_rounded,
+                          color: _isEditing ? AppColors.primaryGreen : Colors.green[800],
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Level',
+                            Text(
+                              'Current Level',
                               style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
+                                fontSize: 13,
+                                color: Colors.grey[500],
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 4),
                             if (_isEditing)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: AppColors.primaryGreen),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _selectedLevel,
-                                    isExpanded: true,
-                                    items: _levels.map((String level) {
-                                      return DropdownMenuItem<String>(
-                                        value: level,
-                                        child: Text('$level Level'),
-                                      );
-                                    }).toList(),
-                                    onChanged: (String? newValue) {
-                                      setState(() {
-                                        _selectedLevel = newValue;
-                                      });
-                                    },
-                                  ),
+                              DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedLevel,
+                                  isExpanded: true,
+                                  items: _levels.map((String level) {
+                                    return DropdownMenuItem<String>(
+                                      value: level,
+                                      child: Text('$level Level'),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _selectedLevel = newValue;
+                                    });
+                                  },
                                 ),
                               )
                             else
                               Text(
-                                '${userState.level} Level',
+                                '${state.level} Level',
                                 style: const TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
                                 ),
                               ),
                           ],
                         ),
                       ),
-                      if (_isEditing)
-                         const Padding(
-                           padding: EdgeInsets.only(left: 8.0),
-                           child: Icon(Icons.edit, size: 16, color: AppColors.primaryGreen),
-                         ),
+                      if (!_isEditing)
+                        Icon(Icons.edit_rounded, size: 18, color: Colors.grey[400]),
                     ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            if (_isEditing)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
               ),
 
-            if (!_isEditing)
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
+              const SizedBox(height: 48),
+
+              if (_isEditing)
+                ElevatedButton(
+                  onPressed: _saveChanges,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Update Level',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                )
+              else
+                TextButton(
                   onPressed: _logout,
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
                     foregroundColor: AppColors.error,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                       Icon(Icons.logout_rounded),
+                       Icon(Icons.logout_rounded, size: 20),
                        SizedBox(width: 8),
-                       Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                       Text(
+                        'LOG OUT',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildReadOnlyField(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.grey,
+  Widget _buildSummaryCard({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[100]!, width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.green[800],
+              size: 24,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey, // Grey to verify it's read-only
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        const Text(
-          'Contact admin to change',
-          style: TextStyle(fontSize: 10, color: Colors.grey),
-        )
-      ],
+        ],
+      ),
     );
   }
 }
