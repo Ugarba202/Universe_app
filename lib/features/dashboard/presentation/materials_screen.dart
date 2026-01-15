@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'course_materials_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/signup/academic_data.dart';
 
@@ -13,6 +14,8 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   String? _selectedFaculty;
   String? _selectedDepartment;
   String? _selectedLevel;
+  String? _selectedSemester;
+  int _selectedTabIndex = 1; // 0 = Past Question, 1 = Reading Material
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -52,6 +55,26 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       }
     } else if (_selectedLevel == null) {
       items = levels;
+    } else if (_selectedSemester == null) {
+      // Level is selected, show semesters
+      items = ['First Semester', 'Second Semester'];
+    } else {
+      // Semester is selected, show courses for this dept/level/semester
+      if (mockCourses.containsKey(_selectedDepartment)) {
+        final deptData = mockCourses[_selectedDepartment];
+        if (deptData is Map && deptData!.containsKey(_selectedLevel)) {
+          final levelData = deptData[_selectedLevel];
+          if (levelData is Map && levelData!.containsKey(_selectedSemester)) {
+            final semesterCourses = levelData[_selectedSemester];
+            if (semesterCourses is List) {
+              items = semesterCourses!.map((code) {
+                final title = courseTitles[code] ?? 'Untitled Course';
+                return '$code - $title';
+              }).toList();
+            }
+          }
+        }
+      }
     }
 
     if (_searchQuery.isEmpty) return items;
@@ -62,7 +85,9 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
 
   void _onBack() {
     setState(() {
-      if (_selectedLevel != null) {
+      if (_selectedSemester != null) {
+        _selectedSemester = null;
+      } else if (_selectedLevel != null) {
         _selectedLevel = null;
       } else if (_selectedDepartment != null) {
         _selectedDepartment = null;
@@ -77,9 +102,9 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
   @override
   Widget build(BuildContext context) {
     final filteredItems = _getFilteredItems();
-    final title = _selectedLevel != null 
-        ? 'Materials' 
-        : (_selectedDepartment ?? (_selectedFaculty ?? 'Material Hub'));
+    final title = _selectedSemester != null 
+        ? _selectedSemester! 
+        : (_selectedLevel ?? (_selectedDepartment ?? (_selectedFaculty ?? 'Material Hub')));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -94,6 +119,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         leading: (_selectedFaculty != null)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textDark),
@@ -115,18 +141,27 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                       _selectedFaculty = null;
                       _selectedDepartment = null;
                       _selectedLevel = null;
+                      _selectedSemester = null;
                     })),
                     if (_selectedFaculty != null) ...[
                       const Icon(Icons.chevron_right_rounded, size: 16, color: Colors.grey),
                       _buildBreadcrumb(_selectedFaculty!, () => setState(() {
                         _selectedDepartment = null;
                         _selectedLevel = null;
+                        _selectedSemester = null;
                       })),
                     ],
                     if (_selectedDepartment != null) ...[
                       const Icon(Icons.chevron_right_rounded, size: 16, color: Colors.grey),
                       _buildBreadcrumb(_selectedDepartment!, () => setState(() {
                         _selectedLevel = null;
+                        _selectedSemester = null;
+                      })),
+                    ],
+                    if (_selectedLevel != null) ...[
+                      const Icon(Icons.chevron_right_rounded, size: 16, color: Colors.grey),
+                      _buildBreadcrumb(_selectedLevel!, () => setState(() {
+                        _selectedSemester = null;
                       })),
                     ],
                   ],
@@ -143,7 +178,13 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               decoration: InputDecoration(
                 hintText: _selectedFaculty == null 
                   ? 'Search faculties...' 
-                  : (_selectedDepartment == null ? 'Search departments...' : 'Search levels...'),
+                  : (_selectedDepartment == null 
+                      ? 'Search departments...' 
+                      : (_selectedLevel == null 
+                          ? 'Search levels...' 
+                          : (_selectedSemester == null 
+                              ? 'Search semesters...' 
+                              : 'Search courses...'))),
                 prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
                 filled: true,
                 fillColor: Colors.grey.withOpacity(0.05),
@@ -156,7 +197,71 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
             ),
           ),
 
-          // Content Grid
+          // Material Type Tabs (shown when semester is selected)
+          if (_selectedSemester != null)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedTabIndex = 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedTabIndex == 0
+                              ? AppColors.primaryGreen
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Past Question',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _selectedTabIndex == 0
+                                ? Colors.white
+                                : AppColors.textDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _selectedTabIndex = 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _selectedTabIndex == 1
+                              ? AppColors.primaryGreen
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'Reading Material',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: _selectedTabIndex == 1
+                                ? Colors.white
+                                : AppColors.textDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Content Grid or List
           Expanded(
             child: filteredItems.isEmpty
                 ? Center(
@@ -172,40 +277,73 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                       ],
                     ),
                   )
-                : GridView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 0.9,
-                    ),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return _FolderCard(
-                        name: item,
-                        icon: _selectedFaculty == null 
-                            ? _getFacultyIcon(item)
-                            : (_selectedDepartment == null ? Icons.school_rounded : Icons.layers_rounded),
-                        itemCount: _selectedLevel == null ? null : (index * 5 + 10), // Mock count
-                        onTap: () {
-                          setState(() {
-                            if (_selectedFaculty == null) {
-                              _selectedFaculty = item;
-                            } else if (_selectedDepartment == null) {
-                              _selectedDepartment = item;
-                            } else {
-                              _selectedLevel = item;
-                              // Future: Navigate to materials list
-                            }
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
+                : _selectedSemester != null
+                    ? ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        itemCount: filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = filteredItems[index];
+                          return _CourseListTile(
+                            courseName: item,
+                            onTap: () {
+                              final parts = item.split(' - ');
+                              final code = parts[0];
+                              final title = parts.length > 1 ? parts[1] : '';
+                              
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseMaterialsScreen(
+                                    courseCode: code,
+                                    courseTitle: title,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemCount: filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = filteredItems[index];
+                          return _FolderCard(
+                            name: item,
+                            icon: _selectedFaculty == null 
+                                ? _getFacultyIcon(item)
+                                : (_selectedDepartment == null 
+                                    ? Icons.school_rounded 
+                                    : (_selectedLevel == null 
+                                        ? Icons.layers_rounded 
+                                        : (_selectedSemester == null 
+                                            ? Icons.calendar_today_rounded 
+                                            : Icons.description_rounded))),
+                            itemCount: null,
+                            onTap: () {
+                              setState(() {
+                                if (_selectedFaculty == null) {
+                                  _selectedFaculty = item;
+                                } else if (_selectedDepartment == null) {
+                                  _selectedDepartment = item;
+                                } else if (_selectedLevel == null) {
+                                  _selectedLevel = item;
+                                } else if (_selectedSemester == null) {
+                                  _selectedSemester = item;
+                                }
+                                _searchQuery = '';
+                                _searchController.clear();
+                              });
+                            },
+                          );
+                        },
+                      ),
           ),
         ],
       ),
@@ -289,6 +427,71 @@ class _FolderCard extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CourseListTile extends StatelessWidget {
+  final String courseName;
+  final VoidCallback onTap;
+
+  const _CourseListTile({
+    required this.courseName,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        leading: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.folder_rounded,
+            color: AppColors.primaryGreen,
+            size: 24,
+          ),
+        ),
+        title: Text(
+          courseName,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: AppColors.textDark,
+          ),
+        ),
+        subtitle: const Text(
+          'Empty folder',
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.chevron_right_rounded,
+          color: Colors.grey,
         ),
       ),
     );

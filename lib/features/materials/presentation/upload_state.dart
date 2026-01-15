@@ -17,6 +17,7 @@ class UploadState {
   final String? error;
   final bool isSubmitting;
   final Map<String, Map<String, List<String>>> localCourses;
+  final Map<String, String> localCourseTitles; // code -> title
   final bool isAddingNewCourse;
   final bool isSuccess;
 
@@ -35,6 +36,7 @@ class UploadState {
     this.error,
     this.isSubmitting = false,
     this.localCourses = const {},
+    this.localCourseTitles = const {},
     this.isAddingNewCourse = false,
     this.isSuccess = false,
   });
@@ -54,6 +56,7 @@ class UploadState {
     String? error,
     bool? isSubmitting,
     Map<String, Map<String, List<String>>>? localCourses,
+    Map<String, String>? localCourseTitles,
     bool? isAddingNewCourse,
     bool? isSuccess,
   }) {
@@ -72,6 +75,7 @@ class UploadState {
       error: error,
       isSubmitting: isSubmitting ?? this.isSubmitting,
       localCourses: localCourses ?? this.localCourses,
+      localCourseTitles: localCourseTitles ?? this.localCourseTitles,
       isAddingNewCourse: isAddingNewCourse ?? this.isAddingNewCourse,
       isSuccess: isSuccess ?? this.isSuccess,
     );

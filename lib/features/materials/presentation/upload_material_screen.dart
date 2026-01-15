@@ -34,13 +34,14 @@ class UploadMaterialScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
           _buildTypeToggle(state, notifier),
           const SizedBox(height: 32),
-          
+
           _buildSectionHeader('Institutional Details'),
           const SizedBox(height: 16),
           _SelectorField(
@@ -57,36 +58,33 @@ class UploadMaterialScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           _SelectorField(
             label: 'Department',
-            value: state.department.isEmpty ? 'Select Department' : state.department,
+            value: state.department.isEmpty
+                ? 'Select Department'
+                : state.department,
             icon: Icons.school_rounded,
             onTap: state.faculty.isEmpty
                 ? null
                 : () => _showSearchableSelection(
-                      context,
-                      title: 'Select Department',
-                      items: (faculties[state.faculty])
-                              ?.map((e) => e.toString())
-                              .toList() ??
-                          [],
-                      onSelected: (value) => notifier.updateDepartment(value),
-                    ),
+                    context,
+                    title: 'Select Department',
+                    items:
+                        (faculties[state.faculty])
+                            ?.map((e) => e.toString())
+                            .toList() ??
+                        [],
+                    onSelected: (value) => notifier.updateDepartment(value),
+                  ),
           ),
           const SizedBox(height: 20),
           _buildLevelDropdown(state, notifier),
-          
+
           const SizedBox(height: 40),
           _buildSectionHeader('Course Information'),
           const SizedBox(height: 16),
           _buildCourseCodeSection(context, state, notifier),
           const SizedBox(height: 20),
-          _InputField(
-            label: 'Course Title',
-            hint: 'e.g. Data Structures & Algorithms',
-            onChanged: notifier.updateCourseTitle,
-          ),
-          const SizedBox(height: 20),
           _buildConditionalField(state, notifier),
-          
+
           const SizedBox(height: 40),
           _buildSectionHeader('File & Description'),
           const SizedBox(height: 16),
@@ -98,9 +96,9 @@ class UploadMaterialScreen extends ConsumerWidget {
             onChanged: notifier.updateDescription,
             maxLines: 3,
           ),
-          
+
           if (state.error != null) _buildErrorCard(state.error!),
-          
+
           const SizedBox(height: 48),
           _buildSubmitButton(state, notifier),
           const SizedBox(height: 40),
@@ -167,7 +165,10 @@ class UploadMaterialScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
           items: levels
               .map((l) => DropdownMenuItem(value: l, child: Text('$l Level')))
@@ -180,11 +181,14 @@ class UploadMaterialScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCourseCodeSection(BuildContext context, UploadState state, UploadNotifier notifier) {
-    final availableCourses = _getAvailableCourses(state);
-    
+  Widget _buildCourseCodeSection(
+    BuildContext context,
+    UploadState state,
+    UploadNotifier notifier,
+  ) {
     if (state.isAddingNewCourse) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InputField(
             label: 'New Course Code',
@@ -192,27 +196,42 @@ class UploadMaterialScreen extends ConsumerWidget {
             onChanged: notifier.updateCourseCode,
             autofocus: true,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+          _InputField(
+            label: 'New Course Title',
+            hint: 'e.g. Data Communication',
+            onChanged: notifier.updateCourseTitle,
+          ),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               TextButton(
                 onPressed: () => notifier.setIsAddingNewCourse(false),
-                child: const Text('Back to selection', style: TextStyle(color: Colors.grey)),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: state.courseCode.isNotEmpty
-                    ? () => notifier.addNewCourseCode(state.courseCode)
+                onPressed:
+                    state.courseCode.isNotEmpty && state.courseTitle.isNotEmpty
+                    ? () => notifier.addNewCourseCode(
+                        state.courseCode,
+                        state.courseTitle,
+                      )
                     : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-                child: const Text('Add Code'),
+                child: const Text('Add Course'),
               ),
             ],
           ),
@@ -220,16 +239,72 @@ class UploadMaterialScreen extends ConsumerWidget {
       );
     }
 
-    return _SelectorField(
-      label: 'Course Code',
-      value: state.courseCode.isEmpty ? 'Select Course Code' : state.courseCode,
-      icon: Icons.tag_rounded,
-      onTap: () => _showCourseSelection(
-        context,
-        items: availableCourses,
-        onSelected: notifier.updateCourseCode,
-        onAddNew: () => notifier.setIsAddingNewCourse(true),
-      ),
+    final hasAutomatedTitle =
+        courseTitles.containsKey(state.courseCode) ||
+        state.localCourseTitles.containsKey(state.courseCode);
+
+    return Column(
+      children: [
+        _SelectorField(
+          label: 'Course Code',
+          value: state.courseCode.isEmpty
+              ? 'Select Course Code'
+              : state.courseCode,
+          icon: Icons.tag_rounded,
+          onTap: () => _showCourseSelection(
+            context,
+            items: _getAvailableCourses(state),
+            onSelected: notifier.updateCourseCode,
+            onAddNew: () => notifier.setIsAddingNewCourse(true),
+            localTitles: state.localCourseTitles,
+          ),
+        ),
+        if (state.courseCode.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          if (hasAutomatedTitle)
+            _buildReadOnlyTitle(state.courseTitle)
+          else
+            _InputField(
+              label: 'Course Title',
+              hint: 'e.g. Data Structures & Algorithms',
+              onChanged: notifier.updateCourseTitle,
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildReadOnlyTitle(String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Course Title',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.primaryGreen,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.primaryGreen.withOpacity(0.1)),
+          ),
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -238,7 +313,7 @@ class UploadMaterialScreen extends ConsumerWidget {
     if (mockCourses.containsKey(state.department)) {
       final deptLevelCourses = mockCourses[state.department]?[state.level];
       if (deptLevelCourses != null) {
-        courses.addAll(deptLevelCourses);
+        courses.addAll(deptLevelCourses as Iterable<String>);
       }
     }
     final localDeptCourses = state.localCourses[state.department]?[state.level];
@@ -281,11 +356,15 @@ class UploadMaterialScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
-          items: ['1st Semester', '2nd Semester']
-              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-              .toList(),
+          items: [
+            '1st Semester',
+            '2nd Semester',
+          ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
           onChanged: (val) {
             if (val != null) notifier.updateSemester(val);
           },
@@ -310,7 +389,9 @@ class UploadMaterialScreen extends ConsumerWidget {
           color: AppColors.primaryGreen.withOpacity(0.03),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: state.pickedFile != null ? AppColors.primaryGreen : AppColors.primaryGreen.withOpacity(0.3),
+            color: state.pickedFile != null
+                ? AppColors.primaryGreen
+                : AppColors.primaryGreen.withOpacity(0.3),
             style: BorderStyle.solid,
           ),
         ),
@@ -318,7 +399,9 @@ class UploadMaterialScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              state.pickedFile != null ? Icons.check_circle_rounded : Icons.cloud_upload_rounded,
+              state.pickedFile != null
+                  ? Icons.check_circle_rounded
+                  : Icons.cloud_upload_rounded,
               color: AppColors.primaryGreen,
               size: 32,
             ),
@@ -328,8 +411,12 @@ class UploadMaterialScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
-                color: state.pickedFile != null ? AppColors.textDark : Colors.grey[600],
-                fontWeight: state.pickedFile != null ? FontWeight.bold : FontWeight.normal,
+                color: state.pickedFile != null
+                    ? AppColors.textDark
+                    : Colors.grey[600],
+                fontWeight: state.pickedFile != null
+                    ? FontWeight.bold
+                    : FontWeight.normal,
               ),
             ),
           ],
@@ -363,13 +450,16 @@ class UploadMaterialScreen extends ConsumerWidget {
   }
 
   Widget _buildSubmitButton(UploadState state, UploadNotifier notifier) {
-    final bool canSubmit = state.faculty.isNotEmpty &&
+    final bool canSubmit =
+        state.faculty.isNotEmpty &&
         state.department.isNotEmpty &&
         state.level.isNotEmpty &&
         state.courseCode.isNotEmpty &&
         state.courseTitle.isNotEmpty &&
         state.pickedFile != null &&
-        (state.type == MaterialUploadType.pastQuestion ? state.year.isNotEmpty : state.semester.isNotEmpty);
+        (state.type == MaterialUploadType.pastQuestion
+            ? state.year.isNotEmpty
+            : state.semester.isNotEmpty);
 
     return ElevatedButton(
       onPressed: canSubmit && !state.isSubmitting
@@ -386,26 +476,56 @@ class UploadMaterialScreen extends ConsumerWidget {
         elevation: 0,
       ),
       child: state.isSubmitting
-          ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-          : const Text('Upload Material', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ? const SizedBox(
+              height: 24,
+              width: 24,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : const Text(
+              'Upload Material',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
     );
   }
 
-  void _showSearchableSelection(BuildContext context, {required String title, required List<String> items, required void Function(String) onSelected}) {
+  void _showSearchableSelection(
+    BuildContext context, {
+    required String title,
+    required List<String> items,
+    required void Function(String) onSelected,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _ProfileSearchableBottomSheet(title: title, items: items, onSelected: onSelected),
+      builder: (context) => _ProfileSearchableBottomSheet(
+        title: title,
+        items: items,
+        onSelected: onSelected,
+      ),
     );
   }
 
-  void _showCourseSelection(BuildContext context, {required List<String> items, required void Function(String) onSelected, required VoidCallback onAddNew}) {
+  void _showCourseSelection(
+    BuildContext context, {
+    required List<String> items,
+    required void Function(String) onSelected,
+    required VoidCallback onAddNew,
+    required Map<String, String> localTitles,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _CourseSearchBottomSheet(items: items, onSelected: onSelected, onAddNew: onAddNew),
+      builder: (context) => _CourseSearchBottomSheet(
+        items: items,
+        onSelected: onSelected,
+        onAddNew: onAddNew,
+        localTitles: localTitles,
+      ),
     );
   }
 }
@@ -415,7 +535,11 @@ class _Segment extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  const _Segment({required this.title, required this.isActive, required this.onTap});
+  const _Segment({
+    required this.title,
+    required this.isActive,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +553,13 @@ class _Segment extends StatelessWidget {
             color: isActive ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             boxShadow: isActive
-                ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 2))]
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
                 : null,
           ),
           child: Text(
@@ -608,16 +738,18 @@ class _MetadataStep extends StatelessWidget {
         const SizedBox(height: 24),
         _SelectorField(
           label: 'Department',
-          value: state.department.isEmpty ? 'Select Department' : state.department,
+          value: state.department.isEmpty
+              ? 'Select Department'
+              : state.department,
           icon: Icons.school_rounded,
           onTap: state.faculty.isEmpty
               ? null
               : () => _showSearchableSelection(
-                    context,
-                    title: 'Select Department',
-                    items: (faculties[state.faculty] as List<String>?) ?? [],
-                    onSelected: (value) => notifier.updateDepartment(value),
-                  ),
+                  context,
+                  title: 'Select Department',
+                  items: (faculties[state.faculty] as List<String>?) ?? [],
+                  onSelected: (value) => notifier.updateDepartment(value),
+                ),
         ),
         const SizedBox(height: 24),
         Column(
@@ -641,10 +773,15 @@ class _MetadataStep extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
               items: levels
-                  .map((l) => DropdownMenuItem(value: l, child: Text('$l Level')))
+                  .map(
+                    (l) => DropdownMenuItem(value: l, child: Text('$l Level')),
+                  )
                   .toList(),
               onChanged: (val) {
                 if (val != null) notifier.updateLevel(val);
@@ -654,7 +791,8 @@ class _MetadataStep extends StatelessWidget {
         ),
         const SizedBox(height: 48),
         ElevatedButton(
-          onPressed: state.faculty.isNotEmpty &&
+          onPressed:
+              state.faculty.isNotEmpty &&
                   state.department.isNotEmpty &&
                   state.level.isNotEmpty
               ? onContinue
@@ -710,15 +848,15 @@ class _CourseDetailsStep extends StatelessWidget {
 
   List<String> _getAvailableCourses() {
     final List<String> courses = [];
-    
+
     // Get from mock data
     if (mockCourses.containsKey(state.department)) {
       final deptLevelCourses = mockCourses[state.department]?[state.level];
       if (deptLevelCourses != null) {
-        courses.addAll(deptLevelCourses);
+        courses.addAll(deptLevelCourses as Iterable<String>);
       }
     }
-    
+
     // Get from local session data
     final localDeptCourses = state.localCourses[state.department]?[state.level];
     if (localDeptCourses != null) {
@@ -728,7 +866,7 @@ class _CourseDetailsStep extends StatelessWidget {
         }
       }
     }
-    
+
     return courses..sort();
   }
 
@@ -754,7 +892,7 @@ class _CourseDetailsStep extends StatelessWidget {
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         const SizedBox(height: 32),
-        
+
         if (state.isAddingNewCourse) ...[
           _InputField(
             label: 'New Course Code',
@@ -774,8 +912,12 @@ class _CourseDetailsStep extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed: state.courseCode.isNotEmpty
-                    ? () => notifier.addNewCourseCode(state.courseCode)
+                onPressed:
+                    state.courseCode.isNotEmpty && state.courseTitle.isNotEmpty
+                    ? () => notifier.addNewCourseCode(
+                        state.courseCode,
+                        state.courseTitle,
+                      )
                     : null,
                 icon: const Icon(Icons.check_rounded, size: 18),
                 label: const Text('Add Course'),
@@ -783,7 +925,9 @@ class _CourseDetailsStep extends StatelessWidget {
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ],
@@ -791,7 +935,9 @@ class _CourseDetailsStep extends StatelessWidget {
         ] else
           _SelectorField(
             label: 'Course Code',
-            value: state.courseCode.isEmpty ? 'Select Course Code' : state.courseCode,
+            value: state.courseCode.isEmpty
+                ? 'Select Course Code'
+                : state.courseCode,
             icon: Icons.tag_rounded,
             onTap: () => _showCourseSelection(
               context,
@@ -800,7 +946,7 @@ class _CourseDetailsStep extends StatelessWidget {
               onAddNew: () => notifier.setIsAddingNewCourse(true),
             ),
           ),
-        
+
         const SizedBox(height: 24),
         _InputField(
           label: 'Course Title',
@@ -837,7 +983,10 @@ class _CourseDetailsStep extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                 ),
                 items: ['1st Semester', '2nd Semester']
                     .map((s) => DropdownMenuItem(value: s, child: Text(s)))
@@ -860,12 +1009,18 @@ class _CourseDetailsStep extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline_rounded, color: AppColors.error),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: AppColors.error,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       state.error!,
-                      style: const TextStyle(color: AppColors.error, fontSize: 13),
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -874,7 +1029,8 @@ class _CourseDetailsStep extends StatelessWidget {
           ),
         const SizedBox(height: 48),
         ElevatedButton(
-          onPressed: state.isSubmitting ||
+          onPressed:
+              state.isSubmitting ||
                   state.courseCode.isEmpty ||
                   state.courseTitle.isEmpty ||
                   (isPastQuestion ? state.year.isEmpty : state.semester.isEmpty)
@@ -893,7 +1049,10 @@ class _CourseDetailsStep extends StatelessWidget {
               ? const SizedBox(
                   height: 24,
                   width: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text(
                   'Continue',
@@ -917,7 +1076,7 @@ class _CourseDetailsStep extends StatelessWidget {
       builder: (context) => _CourseSearchBottomSheet(
         items: items,
         onSelected: onSelected,
-        onAddNew: onAddNew,
+        onAddNew: onAddNew, localTitles: {},
       ),
     );
   }
@@ -927,15 +1086,18 @@ class _CourseSearchBottomSheet extends StatefulWidget {
   final List<String> items;
   final void Function(String) onSelected;
   final VoidCallback onAddNew;
+  final Map<String, String> localTitles;
 
   const _CourseSearchBottomSheet({
     required this.items,
     required this.onSelected,
     required this.onAddNew,
+    required this.localTitles,
   });
 
   @override
-  State<_CourseSearchBottomSheet> createState() => _CourseSearchBottomSheetState();
+  State<_CourseSearchBottomSheet> createState() =>
+      _CourseSearchBottomSheetState();
 }
 
 class _CourseSearchBottomSheetState extends State<_CourseSearchBottomSheet> {
@@ -1020,7 +1182,10 @@ class _CourseSearchBottomSheetState extends State<_CourseSearchBottomSheet> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.add_circle_outline_rounded, color: AppColors.primaryGreen),
+                    const Icon(
+                      Icons.add_circle_outline_rounded,
+                      color: AppColors.primaryGreen,
+                    ),
                     const SizedBox(width: 12),
                     Flexible(
                       child: Text(
@@ -1046,12 +1211,49 @@ class _CourseSearchBottomSheetState extends State<_CourseSearchBottomSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     itemCount: _filteredItems.length,
                     itemBuilder: (context, index) {
-                      final item = _filteredItems[index];
+                      final code = _filteredItems[index];
+                      final title =
+                          courseTitles[code] ?? widget.localTitles[code] ?? '';
                       return ListTile(
-                        title: Text(item, style: const TextStyle(fontWeight: FontWeight.w600)),
-                        trailing: const Icon(Icons.chevron_right_rounded),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 24,
+                        ),
+                        leading: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.class_rounded,
+                            color: AppColors.primaryGreen,
+                            size: 24,
+                          ),
+                        ),
+                        title: Text(
+                          code,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryGreen,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          title.isEmpty ? 'No title available' : title,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 13,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: AppColors.primaryGreen,
+                          size: 20,
+                        ),
                         onTap: () {
-                          widget.onSelected(item);
+                          widget.onSelected(code);
                           Navigator.pop(context);
                         },
                       );
@@ -1126,7 +1328,9 @@ class _FileFinalizeStep extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  state.pickedFile != null ? Icons.check_circle_rounded : Icons.cloud_upload_rounded,
+                  state.pickedFile != null
+                      ? Icons.check_circle_rounded
+                      : Icons.cloud_upload_rounded,
                   color: AppColors.primaryGreen,
                   size: 40,
                 ),
@@ -1134,8 +1338,12 @@ class _FileFinalizeStep extends StatelessWidget {
                 Text(
                   state.pickedFile?.name ?? 'Click to select PDF or Image',
                   style: TextStyle(
-                    color: state.pickedFile != null ? AppColors.textDark : Colors.grey,
-                    fontWeight: state.pickedFile != null ? FontWeight.bold : FontWeight.normal,
+                    color: state.pickedFile != null
+                        ? AppColors.textDark
+                        : Colors.grey,
+                    fontWeight: state.pickedFile != null
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ],
@@ -1151,7 +1359,9 @@ class _FileFinalizeStep extends StatelessWidget {
         ),
         const SizedBox(height: 48),
         ElevatedButton(
-          onPressed: state.isSubmitting || state.pickedFile == null ? null : onUpload,
+          onPressed: state.isSubmitting || state.pickedFile == null
+              ? null
+              : onUpload,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryGreen,
             foregroundColor: Colors.white,
@@ -1165,7 +1375,10 @@ class _FileFinalizeStep extends StatelessWidget {
               ? const SizedBox(
                   height: 24,
                   width: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : const Text(
                   'Upload Material',
@@ -1285,11 +1498,17 @@ class _SelectorField extends StatelessWidget {
                     value,
                     style: TextStyle(
                       fontSize: 16,
-                      color: value.contains('Select') ? Colors.grey : AppColors.textDark,
+                      color: value.contains('Select')
+                          ? Colors.grey
+                          : AppColors.textDark,
                     ),
                   ),
                 ),
-                const Icon(Icons.search_rounded, color: AppColors.primaryGreen, size: 20),
+                const Icon(
+                  Icons.search_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 20,
+                ),
               ],
             ),
           ),
@@ -1347,7 +1566,10 @@ class _InputField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primaryGreen,
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -1368,10 +1590,12 @@ class _ProfileSearchableBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<_ProfileSearchableBottomSheet> createState() => _ProfileSearchableBottomSheetState();
+  State<_ProfileSearchableBottomSheet> createState() =>
+      _ProfileSearchableBottomSheetState();
 }
 
-class _ProfileSearchableBottomSheetState extends State<_ProfileSearchableBottomSheet> {
+class _ProfileSearchableBottomSheetState
+    extends State<_ProfileSearchableBottomSheet> {
   late List<String> _filteredItems;
   final TextEditingController _searchController = TextEditingController();
 
@@ -1425,8 +1649,11 @@ class _ProfileSearchableBottomSheetState extends State<_ProfileSearchableBottomS
               onChanged: _filter,
               decoration: InputDecoration(
                 hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search,
-                    color: AppColors.primaryGreen, size: 20),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.primaryGreen,
+                  size: 20,
+                ),
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(

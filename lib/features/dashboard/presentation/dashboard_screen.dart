@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -34,40 +35,32 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                       child: CircleAvatar(
                         radius: 24,
-                        backgroundColor: AppColors.primaryGreen.withOpacity(
-                          0.1,
-                        ),
-                        child: Icon(
-                          userState.gender == 'Female'
-                              ? Icons.face_3_rounded
-                              : Icons.face_rounded,
-                          color: AppColors.primaryGreen,
-                          size: 30,
-                        ),
+                        backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
+                        backgroundImage: userState.profileImagePath != null
+                            ? FileImage(File(userState.profileImagePath!))
+                            : null,
+                        child: userState.profileImagePath == null
+                            ? Icon(
+                                userState.gender == 'Female'
+                                    ? Icons.face_3_rounded
+                                    : Icons.face_rounded,
+                                color: AppColors.primaryGreen,
+                                size: 30,
+                              )
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Welcome back,',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            firstName,
-                            style: const TextStyle(
-                              color: AppColors.textDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        'Welcome, $firstName',
+                        style: const TextStyle(
+                          color: AppColors.textDark,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Stack(

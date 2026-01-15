@@ -174,7 +174,7 @@ class _CreateAccountStep3State extends ConsumerState<CreateAccountStep3>
                                 ),
                               ),
                               child: const Text(
-                                'Next',
+                                'Review Registration',
                                 style: TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
