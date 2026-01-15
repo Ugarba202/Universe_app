@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/signup/signup_provider.dart';
 import 'materials_screen.dart';
 import 'notification_screen.dart';
+import 'profile_screen.dart';
 import '../../materials/presentation/upload_material_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -27,30 +28,40 @@ class DashboardScreen extends ConsumerWidget {
                 // Premium Header
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primaryGreen.withOpacity(0.2),
-                          width: 2,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfileScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primaryGreen.withOpacity(0.2),
+                            width: 2,
+                          ),
                         ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 24,
-                        backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-                        backgroundImage: userState.profileImagePath != null
-                            ? FileImage(File(userState.profileImagePath!))
-                            : null,
-                        child: userState.profileImagePath == null
-                            ? Icon(
-                                userState.gender == 'Female'
-                                    ? Icons.face_3_rounded
-                                    : Icons.face_rounded,
-                                color: AppColors.primaryGreen,
-                                size: 30,
-                              )
-                            : null,
+                        child: CircleAvatar(
+                          radius: 24,
+                          backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
+                          backgroundImage: userState.profileImagePath != null
+                              ? FileImage(File(userState.profileImagePath!))
+                              : null,
+                          child: userState.profileImagePath == null
+                              ? Icon(
+                                  userState.gender == 'Female'
+                                      ? Icons.face_3_rounded
+                                      : Icons.face_rounded,
+                                  color: AppColors.primaryGreen,
+                                  size: 30,
+                                )
+                              : null,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),

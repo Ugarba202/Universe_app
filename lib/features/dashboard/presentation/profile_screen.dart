@@ -1,10 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../auth/presentation/login/login_screen.dart';
 import '../../auth/presentation/signup/signup_provider.dart';
-import '../../auth/presentation/signup/academic_data.dart';
+
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -14,294 +13,285 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  bool _isUpdating = false;
-  final ImagePicker _picker = ImagePicker();
+  String? _selectedLevel;
+  bool _isEditing = false;
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        ref.read(signupProvider.notifier).updateAvatar(image.path);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile photo updated successfully!'),
-              backgroundColor: AppColors.primaryGreen,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick image: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+  final List<String> _levels = ['100', '200', '300', '400', '500', '600'];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with current user level
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userState = ref.read(signupProvider);
+      setState(() {
+        _selectedLevel = userState.level.isNotEmpty ? userState.level : null;
+      });
+    });
+  }
+
+  void _saveChanges() {
+    if (_selectedLevel != null) {
+      ref.read(signupProvider.notifier).updateLevel(_selectedLevel!);
+      setState(() {
+        _isEditing = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Profile updated successfully'),
+            backgroundColor: AppColors.primaryGreen),
+      );
     }
   }
 
-  String? _selectedLevel;
-
-  Future<void> _handleUpdate() async {
-    if (_selectedLevel != null) {
-      ref.read(signupProvider.notifier).updateLevel(_selectedLevel!);
-    }
-    
-    setState(() => _isUpdating = true);
-    
-    // Simulate API call/Database save
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (mounted) {
-      setState(() => _isUpdating = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: AppColors.primaryGreen,
-        ),
-      );
-    }
+  void _logout() {
+    // Navigate to Login and remove all routes
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(signupProvider);
-    ref.read(signupProvider.notifier);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.grey[50], // Light background for contrast
       appBar: AppBar(
-        title: const Text(
-          'My Profile',
-          style: TextStyle(
-            color: AppColors.textDark,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('My Profile',
+            style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(_isEditing ? Icons.close : Icons.edit_rounded,
+                color: AppColors.primaryGreen),
+            onPressed: () {
+              setState(() {
+                _isEditing = !_isEditing;
+                // Reset selection if cancelling
+                if (!_isEditing) {
+                  _selectedLevel = userState.level;
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            // Interactive Avatar
+            // Avatar Section
             Center(
-              child: GestureDetector(
-                onTap: _pickImage,
-                child: Stack(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primaryGreen.withOpacity(0.2),
-                          width: 3,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-                        backgroundImage: userState.profileImagePath != null
-                            ? FileImage(File(userState.profileImagePath!))
-                            : null,
-                        child: userState.profileImagePath == null
-                            ? Icon(
-                                userState.gender == 'Female'
-                                    ? Icons.face_3_rounded
-                                    : Icons.face_rounded,
-                                color: AppColors.primaryGreen,
-                                size: 80,
-                              )
-                            : null,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 4,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ],
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primaryGreen, width: 2),
+                ),
+                child: Center(
+                  child: Icon(
+                    userState.gender == 'Female'
+                        ? Icons.face_3_rounded
+                        : Icons.face_rounded,
+                    size: 50,
+                    color: AppColors.primaryGreen,
+                  ),
                 ),
               ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              userState.registrationNumber,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            Text(
+              userState.email,
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
             const SizedBox(height: 32),
 
-           
-            const SizedBox(height: 16),
-            _buildReadOnlyCard(
-              label: 'Registration Number',
-              value: userState.registrationNumber,
-              icon: Icons.badge_outlined,
-            ),
-            const SizedBox(height: 16),
-            _buildReadOnlyCard(
-              label: 'Phone Number',
-              value: userState.phoneNumber.isEmpty ? 'Not Provided' : userState.phoneNumber,
-              icon: Icons.phone_android_rounded,
-            ),
-            const SizedBox(height: 16),
-            _buildReadOnlyCard(
-              label: 'Faculty',
-              value: userState.faculty,
-              icon: Icons.account_balance_outlined,
-            ),
-            const SizedBox(height: 16),
-            _buildReadOnlyCard(
-              label: 'Department',
-              value: userState.department,
-              icon: Icons.school_outlined,
-            ),
-            const SizedBox(height: 24),
-
-            // Editable Level
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Current Academic Level',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryGreen,
-                  letterSpacing: 0.5,
-                ),
+            // Academic Details Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _selectedLevel ?? (userState.level.isEmpty ? '200' : userState.level),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey.withOpacity(0.05),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              ),
-              items: levels
-                  .map((l) => DropdownMenuItem(value: l, child: Text('$l Level')))
-                  .toList(),
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedLevel = val);
-              },
-            ),
-
-            const SizedBox(height: 40),
-
-            // Update Button
-            ElevatedButton(
-              onPressed: _isUpdating ? null : _handleUpdate,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 0,
-              ),
-              child: _isUpdating
-                  ? const SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                    )
-                  : const Text(
-                      'Update Profile',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ACADEMIC DETAILS',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      letterSpacing: 1,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildReadOnlyField('Faculty', userState.faculty),
+                  const Divider(height: 24),
+                  _buildReadOnlyField('Department', userState.department),
+                  const Divider(height: 24),
+                  
+                  // Level Field (Editable)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Level',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            if (_isEditing)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppColors.primaryGreen),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _selectedLevel,
+                                    isExpanded: true,
+                                    items: _levels.map((String level) {
+                                      return DropdownMenuItem<String>(
+                                        value: level,
+                                        child: Text('$level Level'),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        _selectedLevel = newValue;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              )
+                            else
+                              Text(
+                                '${userState.level} Level',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      if (_isEditing)
+                         const Padding(
+                           padding: EdgeInsets.only(left: 8.0),
+                           child: Icon(Icons.edit, size: 16, color: AppColors.primaryGreen),
+                         ),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 32),
 
-            // Logout
-            OutlinedButton(
-              onPressed: () {
-                // Future: Navigate to splash/login and clear state
-              },
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            if (_isEditing)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _saveChanges,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text(
+                    'Save Changes',
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                 ),
-                foregroundColor: AppColors.error,
               ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(fontWeight: FontWeight.bold),
+
+            if (!_isEditing)
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: _logout,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    foregroundColor: AppColors.error,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                       Icon(Icons.logout_rounded),
+                       SizedBox(width: 8),
+                       Text('Log Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildReadOnlyCard({
-    required String label,
-    required String value,
-    required IconData icon,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey[400], size: 28),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.grey[500],
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textDark,
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildReadOnlyField(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey, // Grey to verify it's read-only
+          ),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          'Contact admin to change',
+          style: TextStyle(fontSize: 10, color: Colors.grey),
+        )
+      ],
     );
   }
 }
