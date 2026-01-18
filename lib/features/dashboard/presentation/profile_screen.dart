@@ -38,8 +38,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ref.read(signupProvider.notifier).updateAvatar(image.path);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Profile picture updated'),
-            backgroundColor: AppColors.primaryGreen),
+          content: Text('Profile picture updated'),
+          backgroundColor: AppColors.primaryGreen,
+        ),
       );
     }
   }
@@ -52,8 +53,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Level updated successfully'),
-            backgroundColor: AppColors.primaryGreen),
+          content: Text('Level updated successfully'),
+          backgroundColor: AppColors.primaryGreen,
+        ),
       );
     }
   }
@@ -90,7 +92,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Stack(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(state.profileImagePath != null ? 0 : 24),
+                      padding: EdgeInsets.all(
+                        state.profileImagePath != null ? 0 : 24,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryGreen.withOpacity(0.08),
                         shape: BoxShape.circle,
@@ -150,7 +154,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'Your registration summary',
+                  'Your registration summary text',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey[400],
@@ -190,7 +194,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: Colors.grey[50], // Slightly off-white like in image
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: _isEditing ? AppColors.primaryGreen : Colors.grey[200]!,
+                      color: _isEditing
+                          ? AppColors.primaryGreen
+                          : Colors.grey[200]!,
                       width: 1,
                     ),
                   ),
@@ -204,7 +210,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                         child: Icon(
                           Icons.trending_up_rounded,
-                          color: _isEditing ? AppColors.primaryGreen : Colors.green[800],
+                          color: _isEditing
+                              ? AppColors.primaryGreen
+                              : Colors.green[800],
                           size: 24,
                         ),
                       ),
@@ -253,7 +261,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                       ),
                       if (!_isEditing)
-                        Icon(Icons.edit_rounded, size: 18, color: Colors.grey[400]),
+                        Icon(
+                          Icons.edit_rounded,
+                          size: 18,
+                          color: Colors.grey[400],
+                        ),
                     ],
                   ),
                 ),
@@ -288,9 +300,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
-                       Icon(Icons.logout_rounded, size: 20),
-                       SizedBox(width: 8),
-                       Text(
+                      Icon(Icons.logout_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text(
                         'LOG OUT',
                         style: TextStyle(
                           fontSize: 14,
@@ -329,11 +341,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: Colors.green[800],
-              size: 24,
-            ),
+            child: Icon(icon, color: Colors.green[800], size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
